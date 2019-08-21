@@ -1,49 +1,126 @@
-function fskd(g,f0,f1)
-%Para que funcione se debe ingresar los siguienes parametros
-%fskd([1 0 1 1 0],1,2)
-if nargin > 3
-    error('Too many input arguments')
-elseif nargin==1
-    f0=1;f1=2;
-elseif nargin==2
-    f1=2;
+clc
+clear all
+close all
+
+
+%----------datos
+
+%datos dfigitales
+
+datos='00110100010'
+tb=50;
+regla_bit_alto = 0; %posibles opciones: 1 v 0
+
+
+%datos del carrier
+
+Ac =10;
+fc = 1000e3;
+phi_c = 0;
+
+
+%Regla de modulacion ASK :: posibles pociones: 1 v 0
+regla_ASK_transmite_carrier=1;
+
+%Regla de modulacion FSK :: posibles pociones: 1 v 0
+regla_FSK_transmite_HF=1;
+delta_freq= 500e3;
+
+%Regla de modulacion PSK :: posibles pociones: 1 v 0
+regla_PSK_transmite_desfase=1;
+
+%----------Procesos
+
+
+%construccion de los datos digitales
+
+cero = zeros(1,tb);
+uno = ones(1,tb);
+cadena = [];
+cadenaInversa=[];
+
+
+for m=1:length(datos)
+   
+      if (datos(m)=='0')
+       cadena = [cadena cero];
+       cadenaInversa = [cadenaInversa uno];
+    
+       else
+       cadena = [cadena uno];
+       cadenaInversa = [cadenaInversa cero];
+      end
+      
 end
- 
-val0=ceil(f0)-f0;
-val1=ceil(f1)-f1;
-if val0 ~=0 || val1 ~=0;
-    error('Frequency must be an integer');
+      
+if(regla_bit_alto ==1)
+    bitstream = 5*cadena;
+else
+    bitstream = 5*cadenaInversa
 end
- 
-if f0<1 || f1<1;
-    error('Frequency must be bigger than 1');
+   
+%construccion carrier
+
+tc = linspace(0,(2*length(datos))/fc,length(bitstream));
+carrier =Ac*sin(2*pi*fc*tc+ phi_c);
+
+%---modulacion ask
+if (regla_ASK_transmite_carrier)
+    ASK= cadena.*carrier;
+else
+    ASK=cadenaInversa.*carrier;
 end
- 
- 
-t=0:2*pi/99:2*pi;
-cp=[];sp=[];
-mod=[];mod1=[];bit=[];
- 
-for n=1:length(g);
-    if g(n)==0;
-        die=ones(1,100);
-        c=sin(f0*t);
-        se=zeros(1,100);
-    else g(n)==1;
-        die=ones(1,100);
-        c=sin(f1*t);
-        se=ones(1,100);
-    end
-    cp=[cp die];
-    mod=[mod c];
-    bit=[bit se];
+
+
+%---modulacion fsk
+fc_delta=fc-delta_freq;
+carrier_delta =Ac*sin(2*pi*fc_delta*tc+ phi_c);
+if (regla_FSK_transmite_HF==1)
+    FSK1=cadena.*carrier;
+    FSK2=cadenaInversa.*carrier_delta;
+else
+    FSK1=cadenaInversa.*carrier;
+    FSK2=cadena.*carrier_delta;
 end
- 
-ask=cp.*mod;
-subplot(2,1,1);plot(bit,'LineWidth',1.5);grid on;
-title('Binary Signal');
-axis([0 100*length(g) -2.5 2.5]);
- 
-subplot(2,1,2);plot(ask,'LineWidth',1.5);grid on;
-title('FSK modulation');
-axis([0 100*length(g) -2.5 2.5]);
+FSK= FSK1+FSK2;
+
+%---modulacion psk
+carrier_pi =Ac*sin(2*pi*fc*tc+ pi);
+if (regla_PSK_transmite_desfase==1)
+    PSK1=cadena.*carrier;
+    PSK2=cadenaInversa.*carrier_pi;
+else
+    PSK1=cadenaInversa.*carrier;
+    PSK2=cadena.*carrier_pi;
+end
+PSK= PSK1+PSK2;
+
+
+
+%----------resultados
+
+figure (1)
+subplot(5,1,1)
+titulo = cat(2,'Datos DIGITALES ',datos);
+plot (bitstream), grid on,title(titulo)
+axis ([0 length(bitstream) -1 6 ])
+subplot(5,1,2)
+plot(tc,carrier),title ('Carrier')
+axis([0 max(tc) -Ac Ac]),
+set(gca,'XTick',[0:(1/fc):(1/fc)*length(datos)])
+grid on
+subplot(5,1,3)
+plot(tc,ASK),title('Señal Modulada en ASK')
+axis([0 max(tc) -Ac Ac]),
+set(gca,'XTick',[0:(1/fc):(1/fc)*length(datos)])
+grid on
+subplot(5,1,4)
+plot(tc,FSK),title('Señal Modulada en FSK')
+axis([0 max(tc) -Ac Ac]),
+set(gca,'XTick',[0:(1/fc):(1/fc)*length(datos)])
+grid on
+subplot(5,1,5)
+plot(tc,PSK),title('Señal Modulada en PSK')
+axis([0 max(tc) -Ac Ac]),
+set(gca,'XTick',[0:(1/fc):(1/fc)*length(datos)])
+grid on
