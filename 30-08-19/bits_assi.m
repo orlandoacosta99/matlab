@@ -247,17 +247,19 @@ grid on
 subplot(5,2,4)
 titulo=cat(2,'Datos unipolar positiva ',cadena_bits);
 plot (NRZ_UP), grid on,title(titulo)
-
+axis ([0 length(NRZ_UP) -1 15 ])
 subplot(5,2,6)
 titulo=cat(2,'Datos unipolar negativa ',cadena_bits);
 plot (NRZ_UN), grid on,title(titulo)
+axis ([0 length(NRZ_UN) -15 10 ])
 
 subplot(5,2,8)
 titulo=cat(2,'Datos polar ',cadena_bits);
 plot (NRZ_POL), grid on,title(titulo)
+axis ([0 length(NRZ_POL) -15 15 ])
 
 subplot(5,2,10)
 titulo=cat(2,'Unipolar RZ ',cadena_bits);
 plot (unipolar_RZ), grid on,title(titulo)
-
+axis ([0 length(unipolar_RZ) -1 15 ])
 
