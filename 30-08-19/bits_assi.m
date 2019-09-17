@@ -4,16 +4,23 @@ close all
 
 %-----data in-----
 textoClaro = 'hola';
+cadena = [];
+cadenaInversa=[];
 cadenaPolar=[];
 cadenaPolarInversa=[];
-tb=50;
+
+cadena_RZ=[];
+cadenaInversa_RZ=[];
+tb=100;
+tb_RZ = tb/2;
 regla_bit_alto = 0; %posibles opciones: 1 v 0
+
 
 %construccion de los datos digitales
 cero = zeros(1,tb);
 uno = ones(1,tb);
-cadena = [];
-cadenaInversa=[];
+uno_RZ = [ones(1,tb_RZ) zeros(1,tb_RZ)];
+
 
 %datos del carrier
 Ac =10;
@@ -33,11 +40,17 @@ regla_PSK_transmite_desfase=1;
 
 % datos NRZ UP positiva
 regla_NRZ_UP_alto=1;
-A=10;
+A=12;
+
 % datos NRZ UP positiva
 regla_NRZ_UN_alto=1;
+
 % datos polar
 regla_NRZ_Polar_alto=1;
+
+% datos unipolar RZ
+regla_unipolar_RZ_alto=1;
+
 
 %----process----
 
@@ -103,23 +116,33 @@ ascii_cifrado = double (textoClaro);
 bits_cifrados = dec2bin(ascii_cifrado);
 cadena_bits_cifrada = reshape(bits_cifrados.', 1, []);
 
-
-      
 for m=1:length(cadena_bits)
     
     if (cadena_bits(m)=='0')
-        cadena = [cadena cero];
-       cadenaInversa = [cadenaInversa uno];
-       cadenaPolar = [cadenaPolar -uno];
-       cadenaPolarInversa = [cadenaPolarInversa -uno];      
-    
-    else
        cadena = [cadena uno];
        cadenaInversa = [cadenaInversa cero];
+       
        cadenaPolar = [cadenaPolar uno];
        cadenaPolarInversa = [cadenaPolarInversa -uno];
-    end  
+       
+       cadena_RZ = [cadena_RZ uno_RZ];
+       cadenaInversa_RZ = [cadenaInversa_RZ cero];
+       
+    
+       else
+       cadena = [cadena cero];
+       cadenaInversa = [cadenaInversa uno];
+       
+       cadenaPolar = [cadenaPolar -uno];
+       cadenaPolarInversa = [cadenaPolarInversa uno];
+       
+       cadena_RZ = [cadena_RZ cero];
+       cadenaInversa_RZ = [cadenaInversa_RZ uno_RZ];
+       
+      end
+      
 end
+      
 
 if(regla_bit_alto ==1)
     bitstream = 5*cadena;
@@ -168,19 +191,28 @@ if (regla_NRZ_UP_alto==1)
 else
     NRZ_UP= A*cadenaInversa;
 end
+
 % unipolar negativa
 if (regla_NRZ_UP_alto==1)
     NRZ_UN= -A*cadena;
 else
     NRZ_UN= -A*cadenaInversa;
 end
-% codificacion polar 
+
+% polar 
 if (regla_NRZ_Polar_alto==1)
     NRZ_POL= A*cadenaPolar;
 else
     NRZ_POL= A*cadenaPolarInversa;
 end
 
+
+% unipolar RZ
+if (regla_unipolar_RZ_alto==1)
+    unipolar_RZ = A*cadena_RZ;
+else
+    unipolar_RZ = A*cadenaInversa_RZ;
+end
 
 %output
 fprintf('Texto claro: %s\n', textoClaro);
@@ -223,3 +255,9 @@ plot (NRZ_UN), grid on,title(titulo)
 subplot(5,2,8)
 titulo=cat(2,'Datos polar ',cadena_bits);
 plot (NRZ_POL), grid on,title(titulo)
+
+subplot(5,2,10)
+titulo=cat(2,'Unipolar RZ ',cadena_bits);
+plot (unipolar_RZ), grid on,title(titulo)
+
+
